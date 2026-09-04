@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cresco Apps Store</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗂️</text></svg>">
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --card-bg:#ffffff;
+    --text:#1d2229;
+    --muted:#667085;
+    --border:#e6e8ec;
+    --accent:#3b5bfd;
+    --accent-soft:#eef1ff;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14161a;
+      --card-bg:#1d2026;
+      --text:#eef0f3;
+      --muted:#9aa1ac;
+      --border:#2b2f37;
+      --accent:#7c92ff;
+      --accent-soft:#232849;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  /* ---------- Lock screen ---------- */
+  #lock-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  #lock-card{
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:36px 32px;
+    width:100%;
+    max-width:360px;
+    text-align:center;
+  }
+  #lock-card .emoji{font-size:36px;margin-bottom:8px;}
+  #lock-card h1{font-size:19px;margin:0 0 4px;}
+  #lock-card p{color:var(--muted);font-size:13.5px;margin:0 0 20px;}
+  #lock-card input{
+    width:100%;
+    padding:11px 14px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+    font-size:15px;
+    margin-bottom:12px;
+  }
+  #lock-card button{
+    width:100%;
+    padding:11px 14px;
+    border-radius:10px;
+    border:none;
+    background:var(--accent);
+    color:white;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  #lock-card button:hover{opacity:.92;}
+  #lock-error{color:#e5484d;font-size:13px;margin-top:10px;min-height:16px;}
+
+  /* ---------- Store ---------- */
+  #store{display:none;}
+  header{
+    padding:28px 24px 20px;
+    max-width:1080px;
+    margin:0 auto;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .mark{
+    width:40px;height:40px;border-radius:10px;
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:18px;flex-shrink:0;
+  }
+  .brand h1{font-size:20px;margin:0;}
+  .brand p{margin:2px 0 0;color:var(--muted);font-size:13.5px;}
+
+  main{max-width:1080px;margin:0 auto;padding:0 24px 60px;}
+  .section-label{
+    text-transform:uppercase;
+    font-size:11.5px;
+    letter-spacing:.06em;
+    color:var(--muted);
+    font-weight:700;
+    margin:28px 0 12px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    gap:16px;
+  }
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+  }
+  .card .icon{
+    width:38px;height:38px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;margin-bottom:14px;
+  }
+  .card h3{font-size:15.5px;margin:0 0 6px;}
+  .card p{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.45;flex-grow:1;}
+  .card a.open-btn{
+    display:block;
+    text-align:center;
+    text-decoration:none;
+    background:var(--accent);
+    color:#fff;
+    font-size:13.5px;
+    font-weight:600;
+    padding:9px 14px;
+    border-radius:8px;
+  }
+  .card a.open-btn:hover{opacity:.92;}
+  .card.pending a.open-btn{
+    background:var(--border);
+    color:var(--muted);
+    pointer-events:none;
+  }
+  .badge{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:99px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    margin-bottom:10px;
+    width:fit-content;
+  }
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    padding:20px 24px 40px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ LOCK SCREEN ============ -->
+  <div id="lock-screen">
+    <div id="lock-card">
+      <div class="emoji">🗂️</div>
+      <h1>Cresco Apps Store</h1>
+      <p>Enter the access password to continue</p>
+      <input type="password" id="pw-input" placeholder="Password" autofocus>
+      <button onclick="tryUnlock()">Unlock</button>
+      <div id="lock-error"></div>
+    </div>
+  </div>
+
+  <!-- ============ APP STORE ============ -->
+  <div id="store">
+    <header>
+      <div class="brand">
+        <div class="mark">C</div>
+        <div>
+          <h1>Cresco Apps Store</h1>
+          <p>All your client &amp; team apps, in one place</p>
+        </div>
+      </div>
+    </header>
+    <main id="main"></main>
+    <footer>Cresco Apps Store — built with Claude · last updated <span id="updated-date"></span></footer>
+  </div>
+
+<script>
+/* =====================================================================
+   HOW TO ADD OR EDIT AN APP
+   Just add/edit an object in the APPS array below. Each app needs:
+     name        - shown as the card title
+     description - one or two lines about what it does
+     url         - the live URL to open (leave "" for a "coming soon" card)
+     icon        - one emoji
+     color       - hex color used behind the icon
+     category    - groups cards under a section heading
+   That's it — no other part of this file needs to change to add an app.
+   ===================================================================== */
+
+const APPS = [
+  {
+    name: "Flex Benefit CJM",
+    description: "Client journey map / planning tool for flexible benefit design.",
+    url: "",
+    icon: "🧭",
+    color: "#fdeedc",
+    category: "Flex Benefit"
+  },
+  {
+    name: "Flex Benefit",
+    description: "Flex Benefits Portal — client-facing tool for browsing and managing flexible benefit options.",
+    url: "https://tin74tin.github.io/Flex-Benefit/",
+    icon: "🧩",
+    color: "#e3f2fd",
+    category: "Flex Benefit"
+  },
+
+  // -------------------------------------------------------------------
+  // Existing apps — uncomment (remove the leading "//") and fill in a
+  // real url whenever you're ready to list one of these:
+  //
+  // {
+  //   name: "Payroll / Distribution",
+  //   description: "Commission & payroll distribution across roles.",
+  //   url: "https://distributionflows.netlify.app",
+  //   icon: "💰",
+  //   color: "#e6f4ea",
+  //   category: "Operations"
+  // },
+  // {
+  //   name: "Outpost Booking",
+  //   description: "Clubhouse slot booking with live calendar sync.",
+  //   url: "https://tin74tin.github.io/Outpost-Booking",
+  //   icon: "📅",
+  //   color: "#f3e8fd",
+  //   category: "Operations"
+  // },
+  // {
+  //   name: "Bill Splitter",
+  //   description: "Multi-currency bill splitting with live FX rates.",
+  //   url: "",
+  //   icon: "🧾",
+  //   color: "#fdecea",
+  //   category: "Tools"
+  // },
+];
+
+// Change this to whatever password you want to share with your team/clients.
+// Note: this is a simple front-door lock, not real security — anyone who
+// views the page source can find the password. Good enough for keeping the
+// link private among people you've shared it with; don't put anything
+// truly sensitive behind it.
+const SITE_PASSWORD = "cresco2026";
+
+function tryUnlock(){
+  const input = document.getElementById('pw-input');
+  const error = document.getElementById('lock-error');
+  if(input.value === SITE_PASSWORD){
+    try{ sessionStorage.setItem('cresco_unlocked','1'); }catch(e){}
+    showStore();
+  }else{
+    error.textContent = "Incorrect password, try again.";
+    input.value = "";
+    input.focus();
+  }
+}
+
+document.getElementById('pw-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') tryUnlock();
+});
+
+function showStore(){
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('store').style.display = 'block';
+  renderApps();
+}
+
+function renderApps(){
+  const main = document.getElementById('main');
+  const categories = [...new Set(APPS.map(a => a.category || 'Apps'))];
+
+  categories.forEach(cat => {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = cat;
+    main.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    APPS.filter(a => (a.category || 'Apps') === cat).forEach(app => {
+      const pending = !app.url;
+      const card = document.createElement('div');
+      card.className = 'card' + (pending ? ' pending' : '');
+      card.innerHTML = `
+        ${pending ? '<span class="badge">Coming soon</span>' : ''}
+        <div class="icon" style="background:${app.color || '#eef1ff'}">${app.icon || '📦'}</div>
+        <h3>${app.name}</h3>
+        <p>${app.description || ''}</p>
+        <a class="open-btn" href="${app.url || '#'}" target="_blank" rel="noopener">
+          ${pending ? 'Not linked yet' : 'Open App →'}
+        </a>
+      `;
+      grid.appendChild(card);
+    });
+
+    main.appendChild(grid);
+  });
+
+  document.getElementById('updated-date').textContent =
+    new Date().toLocaleDateString('en-SG', { year:'numeric', month:'long', day:'numeric' });
+}
+
+// Stay unlocked for the rest of this browser tab session.
+try{
+  if(sessionStorage.getItem('cresco_unlocked') === '1'){
+    showStore();
+  }
+}catch(e){}
+</script>
+</body>
+</html>

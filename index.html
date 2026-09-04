@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cresco Apps Store</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗂️</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#f5f6f8;
@@ -160,172 +161,92 @@
     text-align:center;
     color:var(--muted);
     font-size:12px;
-    padding:20px 24px 40px;
+    padding:8px 24px 16px;
   }
-</style>
-</head>
-<body>
-
-  <!-- ============ LOCK SCREEN ============ -->
-  <div id="lock-screen">
-    <div id="lock-card">
-      <div class="emoji">🗂️</div>
-      <h1>Cresco Apps Store</h1>
-      <p>Enter the access password to continue</p>
-      <input type="password" id="pw-input" placeholder="Password" autofocus>
-      <button onclick="tryUnlock()">Unlock</button>
-      <div id="lock-error"></div>
-    </div>
-  </div>
-
-  <!-- ============ APP STORE ============ -->
-  <div id="store">
-    <header>
-      <div class="brand">
-        <div class="mark">C</div>
-        <div>
-          <h1>Cresco Apps Store</h1>
-          <p>All your client &amp; team apps, in one place</p>
-        </div>
-      </div>
-    </header>
-    <main id="main"></main>
-    <footer>Cresco Apps Store — built with Claude · last updated <span id="updated-date"></span></footer>
-  </div>
-
-<script>
-/* =====================================================================
-   HOW TO ADD OR EDIT AN APP
-   Just add/edit an object in the APPS array below. Each app needs:
-     name        - shown as the card title
-     description - one or two lines about what it does
-     url         - the live URL to open (leave "" for a "coming soon" card)
-     icon        - one emoji
-     color       - hex color used behind the icon
-     category    - groups cards under a section heading
-   That's it — no other part of this file needs to change to add an app.
-   ===================================================================== */
-
-const APPS = [
-  {
-    name: "Flex Benefit CJM",
-    description: "Client journey map / planning tool for flexible benefit design.",
-    url: "",
-    icon: "🧭",
-    color: "#fdeedc",
-    category: "Flex Benefit"
-  },
-  {
-    name: "Flex Benefit",
-    description: "Flex Benefits Portal — client-facing tool for browsing and managing flexible benefit options.",
-    url: "https://tin74tin.github.io/Flex-Benefit/",
-    icon: "🧩",
-    color: "#e3f2fd",
-    category: "Flex Benefit"
-  },
-
-  // -------------------------------------------------------------------
-  // Existing apps — uncomment (remove the leading "//") and fill in a
-  // real url whenever you're ready to list one of these:
-  //
-  // {
-  //   name: "Payroll / Distribution",
-  //   description: "Commission & payroll distribution across roles.",
-  //   url: "https://distributionflows.netlify.app",
-  //   icon: "💰",
-  //   color: "#e6f4ea",
-  //   category: "Operations"
-  // },
-  // {
-  //   name: "Outpost Booking",
-  //   description: "Clubhouse slot booking with live calendar sync.",
-  //   url: "https://tin74tin.github.io/Outpost-Booking",
-  //   icon: "📅",
-  //   color: "#f3e8fd",
-  //   category: "Operations"
-  // },
-  // {
-  //   name: "Bill Splitter",
-  //   description: "Multi-currency bill splitting with live FX rates.",
-  //   url: "",
-  //   icon: "🧾",
-  //   color: "#fdecea",
-  //   category: "Tools"
-  // },
-];
-
-// Change this to whatever password you want to share with your team/clients.
-// Note: this is a simple front-door lock, not real security — anyone who
-// views the page source can find the password. Good enough for keeping the
-// link private among people you've shared it with; don't put anything
-// truly sensitive behind it.
-const SITE_PASSWORD = "cresco2026";
-
-function tryUnlock(){
-  const input = document.getElementById('pw-input');
-  const error = document.getElementById('lock-error');
-  if(input.value === SITE_PASSWORD){
-    try{ sessionStorage.setItem('cresco_unlocked','1'); }catch(e){}
-    showStore();
-  }else{
-    error.textContent = "Incorrect password, try again.";
-    input.value = "";
-    input.focus();
+  #manage-toggle{
+    display:block;
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    padding:4px 24px 30px;
+    cursor:pointer;
+    text-decoration:underline;
+    background:none;
+    border:none;
+    width:100%;
   }
-}
 
-document.getElementById('pw-input').addEventListener('keydown', function(e){
-  if(e.key === 'Enter') tryUnlock();
-});
-
-function showStore(){
-  document.getElementById('lock-screen').style.display = 'none';
-  document.getElementById('store').style.display = 'block';
-  renderApps();
-}
-
-function renderApps(){
-  const main = document.getElementById('main');
-  const categories = [...new Set(APPS.map(a => a.category || 'Apps'))];
-
-  categories.forEach(cat => {
-    const label = document.createElement('div');
-    label.className = 'section-label';
-    label.textContent = cat;
-    main.appendChild(label);
-
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-
-    APPS.filter(a => (a.category || 'Apps') === cat).forEach(app => {
-      const pending = !app.url;
-      const card = document.createElement('div');
-      card.className = 'card' + (pending ? ' pending' : '');
-      card.innerHTML = `
-        ${pending ? '<span class="badge">Coming soon</span>' : ''}
-        <div class="icon" style="background:${app.color || '#eef1ff'}">${app.icon || '📦'}</div>
-        <h3>${app.name}</h3>
-        <p>${app.description || ''}</p>
-        <a class="open-btn" href="${app.url || '#'}" target="_blank" rel="noopener">
-          ${pending ? 'Not linked yet' : 'Open App →'}
-        </a>
-      `;
-      grid.appendChild(card);
-    });
-
-    main.appendChild(grid);
-  });
-
-  document.getElementById('updated-date').textContent =
-    new Date().toLocaleDateString('en-SG', { year:'numeric', month:'long', day:'numeric' });
-}
-
-// Stay unlocked for the rest of this browser tab session.
-try{
-  if(sessionStorage.getItem('cresco_unlocked') === '1'){
-    showStore();
+  /* ---------- Admin panel ---------- */
+  #admin-panel{
+    display:none;
+    max-width:1080px;
+    margin:0 auto 60px;
+    padding:0 24px;
   }
-}catch(e){}
-</script>
-</body>
-</html>
+  .admin-box{
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:22px;
+    margin-bottom:20px;
+  }
+  .admin-box h2{font-size:14px;margin:0 0 14px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);}
+  .admin-row{
+    display:grid;
+    grid-template-columns:1fr 1fr 1.4fr 70px 90px 1fr auto auto;
+    gap:8px;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .admin-row input{
+    padding:7px 9px;
+    border-radius:7px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+    font-size:12.5px;
+    width:100%;
+  }
+  .admin-row button{
+    padding:7px 10px;
+    border-radius:7px;
+    border:none;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-save{background:var(--accent);color:#fff;}
+  .btn-delete{background:#fde8e8;color:#c0342c;}
+  .admin-labels{
+    display:grid;
+    grid-template-columns:1fr 1fr 1.4fr 70px 90px 1fr auto auto;
+    gap:8px;
+    font-size:10.5px;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  #pw-admin-row{display:flex;gap:10px;}
+  #pw-admin-row input{
+    flex:1;
+    padding:9px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+  }
+  #pw-admin-row button{
+    padding:9px 16px;
+    border-radius:8px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .admin-status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;}
+  @media (max-width:900px){
+    .admin-row,

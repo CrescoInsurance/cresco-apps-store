@@ -258,6 +258,14 @@
     font-weight:600;
     cursor:pointer;
   }
+  .badge-row{
+    display:flex;gap:8px;align-items:center;margin:-4px 0 14px;padding-left:2px;
+  }
+  .badge-row label{font-size:10.5px;color:var(--muted);text-transform:uppercase;white-space:nowrap;}
+  .badge-row input{
+    flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font-size:11.5px;min-width:0;
+  }
   .admin-status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px;}
   @media (max-width:900px){
     .admin-row, .admin-labels{grid-template-columns:1fr;}
@@ -327,6 +335,11 @@
           <input id="new-url" placeholder="https://... (blank = coming soon)">
           <button class="btn-save" onclick="addApp()">Add</button>
         </div>
+        <div class="badge-row">
+          <label>Badge count from</label>
+          <input id="new-badge-url" placeholder="Supabase project URL (optional)">
+          <input id="new-badge-key" placeholder="anon key (optional)">
+        </div>
         <div class="admin-status" id="add-status"></div>
       </div>
     </div>
@@ -359,6 +372,41 @@ async function loadApps(){
   const { data, error } = await sb.from('store_apps').select('*').order('category').order('created_at');
   if(error){ console.error(error); return []; }
   return data || [];
+}
+
+/* =====================================================================
+   DOCK BADGE
+   Sums the pending-approvals count across every app that has a
+   badge_url + badge_anon_key set, and shows it on this page's Dock
+   icon (if pinned via Safari's "Add to Dock"). Each linked app must
+   expose a get_pending_claims_count() RPC callable with its anon key.
+   ===================================================================== */
+let badgePollingStarted = false;
+
+async function updateDockBadge(){
+  if(!('setAppBadge' in navigator)) return;
+  let total = 0;
+  for(const app of APPS){
+    if(!app.badge_url || !app.badge_anon_key) continue;
+    try{
+      const client = supabase.createClient(app.badge_url, app.badge_anon_key);
+      const { data, error } = await client.rpc('get_pending_claims_count');
+      if(!error && typeof data === 'number') total += data;
+    }catch(e){
+      console.error('Badge count failed for', app.name, e);
+    }
+  }
+  try{
+    if(total > 0){ await navigator.setAppBadge(total); }
+    else{ await navigator.clearAppBadge(); }
+  }catch(e){}
+}
+
+function startBadgePolling(){
+  if(badgePollingStarted) return;
+  badgePollingStarted = true;
+  updateDockBadge();
+  setInterval(updateDockBadge, 3 * 60 * 1000);
 }
 
 async function init(){
@@ -396,6 +444,7 @@ async function showStore(){
   document.getElementById('store').style.display = 'block';
   APPS = await loadApps();
   renderApps();
+  startBadgePolling();
 }
 
 function renderApps(){
@@ -475,6 +524,15 @@ function renderAdmin(){
       <button class="btn-delete" onclick="deleteApp('${app.id}')">Delete</button>
     `;
     list.appendChild(row);
+
+    const badgeRow = document.createElement('div');
+    badgeRow.className = 'badge-row';
+    badgeRow.innerHTML = `
+      <label>Badge count from</label>
+      <input id="f-badge-url-${app.id}" placeholder="Supabase project URL (optional)" value="${escapeAttr(app.badge_url || '')}">
+      <input id="f-badge-key-${app.id}" placeholder="anon key (optional)" value="${escapeAttr(app.badge_anon_key || '')}">
+    `;
+    list.appendChild(badgeRow);
   });
 }
 
@@ -544,6 +602,8 @@ async function saveApp(id){
     icon: document.getElementById(`f-icon-${id}`).value.trim() || '📦',
     color: document.getElementById(`f-color-${id}`).value.trim() || '#eef1ff',
     url: document.getElementById(`f-url-${id}`).value.trim(),
+    badge_url: document.getElementById(`f-badge-url-${id}`).value.trim() || null,
+    badge_anon_key: document.getElementById(`f-badge-key-${id}`).value.trim() || null,
   };
   const { error } = await sb.from('store_apps').update(payload).eq('id', id);
   if(error){ status.textContent = 'Error saving: ' + error.message; return; }
@@ -551,6 +611,7 @@ async function saveApp(id){
   APPS = await loadApps();
   renderApps();
   renderAdmin();
+  updateDockBadge();
 }
 
 async function deleteApp(id){
@@ -576,17 +637,20 @@ async function addApp(){
     icon: document.getElementById('new-icon').value.trim() || '📦',
     color: document.getElementById('new-color').value.trim() || '#eef1ff',
     url: document.getElementById('new-url').value.trim(),
+    badge_url: document.getElementById('new-badge-url').value.trim() || null,
+    badge_anon_key: document.getElementById('new-badge-key').value.trim() || null,
   };
   status.textContent = 'Adding...';
   const { error } = await sb.from('store_apps').insert(payload);
   if(error){ status.textContent = 'Error adding: ' + error.message; return; }
-  ['new-name','new-description','new-url'].forEach(id => document.getElementById(id).value = '');
+  ['new-name','new-description','new-url','new-badge-url','new-badge-key'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('new-category').value = 'Apps';
   document.getElementById('new-icon').value = '📦';
   document.getElementById('new-color').value = '#eef1ff';
   APPS = await loadApps();
   renderApps();
   renderAdmin();
+  updateDockBadge();
   status.textContent = 'Added ✓';
 }
 
